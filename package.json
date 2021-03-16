@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/aimeeoak/tinyApp#readme",
   "dependencies": {
+    "ejs": "^3.1.6",
     "express": "^4.17.1",
     "require": "^2.4.20"
   }
