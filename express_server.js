@@ -7,8 +7,8 @@ const PORT =8080;
 app.set("view engine", "ejs");
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userId: "WyattEarp" },
+  "9sm5xK": { longURL: "http://www.google.com", userId: "DocHolliday" }
 };
 
 const users = { 
@@ -21,6 +21,15 @@ const users = {
     id: "DocHolliday", 
     email: "thedentist@pokerstars.com", 
     password: "imurhuckleberry"
+  }
+};
+
+const findURL = (urls) => {
+  const urlZone = {}
+  for (urls of urlDatabase) {
+    if ( = urlDatabase) {
+
+    }
   }
 };
 
@@ -54,12 +63,20 @@ app.get("/urls", (req, res) => {
   const templateVars = { 
     urls: urlDatabase, 
     users: req.cookies.user_id };
+    console.log(req.body.cookie);
+  if (!req.cookies.user_id) {
+    return res.redirect('/login');
+  }
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
   const templateVars = { 
     users: req.cookies.user_id };
+    console.log(req.body.cookie);
+  if (!req.cookies.user_id) {
+    return res.redirect('/login');
+  }
   res.render("urls_new", templateVars);
 });
 
@@ -80,7 +97,7 @@ app.post("/urls/:shortURL", (req, res) => {
 
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL
-  const longURL = shortURL[longURL] 
+  const longURL = urlDatabase[shortURL]
   res.redirect(longURL);
   });
 
@@ -146,7 +163,7 @@ app.post('/login', (req, res) => {
   if (userObj.password !== password) {
     res.status(403).send('Password is incorrect');
   }
-  res.cookie("user_id", req.body.user_id); 
+  res.cookie("user_id", req.body.email); 
   res.redirect('/urls');  
 });
 
