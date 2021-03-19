@@ -24,14 +24,14 @@ const users = {
   }
 };
 
-const findURL = (urls) => {
-  const urlZone = {}
-  for (urls of urlDatabase) {
-    if ( = urlDatabase) {
-
+const findURL = function(obj, value) {
+  for (let key of Object.keys(obj)) {
+    if (obj[key] === value) {
+      return obj;
     }
   }
 };
+
 
 // const addUserToDB = (email, password, user_id, db) => {
 //   db[user_id] = {
@@ -66,6 +66,11 @@ app.get("/urls", (req, res) => {
     console.log(req.body.cookie);
   if (!req.cookies.user_id) {
     return res.redirect('/login');
+  }
+  for (let url in urlDatabase) {
+    if (findURL(urlDatabase[url], users)) {
+      filteredDatabase[url] = findURL(urlDatabase[url], userId);
+    }
   }
   res.render("urls_index", templateVars);
 });
