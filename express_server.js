@@ -1,6 +1,6 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
-//const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 const app = express();
 app.use(cookieParser());
 const PORT =8080;
@@ -57,21 +57,20 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 app.get("/urls", (req, res) => {
   const user = req.cookies.user_id
-  let filteredDatabase = {};
-  for (let url in urlDatabase) {
-    if (findURL(urlDatabase[url], users)) {
-      filteredDatabase[url] = findURL(urlDatabase[url], userId);
+  let filteredDatabase = {}
+ for (let url in urlDatabase){
+    if (findURL(urlDatabase[url], user)){
+     filteredDatabase[url] = findURL(urlDatabase[url], user)
+     };
+   }
+  if (user) {
+    const templateVars = {
+     urls: filteredDatabase,
+     user: users[req.cookies["user_id"]]
     }
+     res.render("urls_index", templateVars);
   }
-  if (users) {
-    const templateVars = { 
-      urls: findURL(urlDatabase, req.cookies.user_id), 
-      users: req.cookies.user_id };
-    if (!req.cookies.user_id) {
-      return res.redirect('/login');
-    }
-  res.render("urls_index", templateVars);
-  }
+   res.redirect("/login")
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
@@ -130,33 +129,23 @@ app.get("/u/:shortURL", (req, res) => {
 //---/LOGIN
 
 app.get('/login', (req, res) => {
-  //
-  let userId = req.body.user_id;
-  if (userId) {
-    res.redirect('urls');
-    return;
-  }
   const templateVars = { users: req.cookies.user_id };
   res.render("login", templateVars);
 });
 
 app.post('/login', (req, res) => {
-  const {email, password} = req.body;
+  const email = req.body.email;
+  const password = req.body.password;
   for (const user in users) {
     if (findUserByEmail(users[user], email)) {
-      if (bcrypt.compareSync(password, users[user].password)) {
+      if (users[user].password === password) {
         res.cookie("user_id", users[user].id);
         res.redirect("/urls");
-        return;
       }
-    };
-  if (!userObj) {
-    res.status(403).send('No such email')
+      res.redirect("403_loginerror");
+    } 
   }
-  if (userObj.password !== password) {
-    res.status(403).send('Password is incorrect');
-    }
-  }
+  res.redirect("/403_notregistered");
 });
 
 app.post('/logout', (req, res) => {
@@ -177,7 +166,7 @@ app.get('/register', (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  const userID = randomString();
+  const userID = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
   if (!email || !password) {
