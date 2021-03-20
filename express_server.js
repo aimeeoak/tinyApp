@@ -1,5 +1,6 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
+//const bcrypt = require('bcryptjs');
 const app = express();
 app.use(cookieParser());
 const PORT =8080;
@@ -55,19 +56,22 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 
 app.get("/urls", (req, res) => {
-  // const filteredDatabase = {};
-  // for (let url in urlDatabase) {
-  //   if (findURL(urlDatabase[url], users)) {
-  //     filteredDatabase[url] = findURL(urlDatabase[url], userId);
-  //   }
-  // }
-  const templateVars = { 
-    urls: findURL(urlDatabase, req.cookies.user_id), 
-    users: req.cookies.user_id };
-  if (!req.cookies.user_id) {
-    return res.redirect('/login');
+  const user = req.cookies.user_id
+  let filteredDatabase = {};
+  for (let url in urlDatabase) {
+    if (findURL(urlDatabase[url], users)) {
+      filteredDatabase[url] = findURL(urlDatabase[url], userId);
+    }
   }
+  if (users) {
+    const templateVars = { 
+      urls: findURL(urlDatabase, req.cookies.user_id), 
+      users: req.cookies.user_id };
+    if (!req.cookies.user_id) {
+      return res.redirect('/login');
+    }
   res.render("urls_index", templateVars);
+  }
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
@@ -103,11 +107,14 @@ app.post("/urls/:shortURL", (req, res) => {
 
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { 
-    users: req.cookies.user_id };
-    console.log(req.body.cookie);
-  if (!req.cookies.user_id) {
-    return res.redirect('/login');
+  const user = req.cookies.user_id
+  const templateVars = {
+    user: users[req.cookies["user_id"]]
+  };
+  if(user){
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect("/login")
   }
   res.render("urls_new", templateVars);
 });
@@ -170,19 +177,27 @@ app.get('/register', (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  const { email, password } = req.body;
-  const userId = generateRandomString();
-  console.log(userId);
+  const userID = randomString();
+  const email = req.body.email;
+  const password = req.body.password;
   if (!email || !password) {
-    return res.status(400).send("Must fill out Email and Password fields");
+    res.redirect("/400");
   }
-  const foundUser = findUserByEmail(email);
-  if (foundUser) {
-    return res.status(400).send("Email already registered");
+  for (const user in users) {
+    if (findUserByEmail(users[user], email)) {
+      res.redirect("/403_cred");
+      return;
+    }
   }
-
-  res.cookie("user_id", userId);
-  res.redirect("/urls");
+  bcrypt.genSalt(10, (err, salt) => {
+    bcrypt.hash(password, salt, (err, hash) => {
+      users[userID] = { id: userID, email: email, password: hash };
+      console.log((users[userID]));
+      console.log(users);
+      res.cookie("user_id", userID);
+      res.redirect("/urls");
+    })
+  })
 });
 
 
