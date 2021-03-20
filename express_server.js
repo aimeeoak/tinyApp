@@ -25,27 +25,22 @@ const users = {
 };
 
 const findURL = function(obj, value) {
+  const userURLs = {};
   for (let key of Object.keys(obj)) {
-    if (obj[key] === value) {
-      return obj;
+    if (obj[key].userId === value) {
+      userURLs[key] = obj[key];
     }
-  }
+  } return userURLs;
 };
 
 
-// const addUserToDB = (email, password, user_id, db) => {
-//   db[user_id] = {
-//     id: user_id, email, password
-//   };
-// };
-
-// const generateRandomString = function() {
-//   const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-//   let string = '';
-//   while (string.length !== 6) {
-//     string += chars[Math.floor(Math.random() * chars.length)];
-//   }
-// }
+const generateRandomString = function() {
+  const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  let string = '';
+  while (string.length !== 6) {
+    string += chars[Math.floor(Math.random() * chars.length)];
+  }
+}
 
 const findUserByEmail = (email) => {
   const user = Object.values(users).find(user => user.email === email);
@@ -60,17 +55,17 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 
 app.get("/urls", (req, res) => {
+  // const filteredDatabase = {};
+  // for (let url in urlDatabase) {
+  //   if (findURL(urlDatabase[url], users)) {
+  //     filteredDatabase[url] = findURL(urlDatabase[url], userId);
+  //   }
+  // }
   const templateVars = { 
-    urls: urlDatabase, 
+    urls: findURL(urlDatabase, req.cookies.user_id), 
     users: req.cookies.user_id };
-    console.log(req.body.cookie);
   if (!req.cookies.user_id) {
     return res.redirect('/login');
-  }
-  for (let url in urlDatabase) {
-    if (findURL(urlDatabase[url], users)) {
-      filteredDatabase[url] = findURL(urlDatabase[url], userId);
-    }
   }
   res.render("urls_index", templateVars);
 });
@@ -140,15 +135,21 @@ app.get('/login', (req, res) => {
 
 app.post('/login', (req, res) => {
   const {email, password} = req.body;
-  const userObj = findUserByEmail(email);
+  for (const user in users) {
+    if (findUserByEmail(users[user], email)) {
+      if (bcrypt.compareSync(password, users[user].password)) {
+        res.cookie("user_id", users[user].id);
+        res.redirect("/urls");
+        return;
+      }
+    };
   if (!userObj) {
     res.status(403).send('No such email')
   }
   if (userObj.password !== password) {
     res.status(403).send('Password is incorrect');
+    }
   }
-  res.cookie("user_id", req.body.email); 
-  res.redirect('/urls');  
 });
 
 app.post('/logout', (req, res) => {
@@ -171,7 +172,7 @@ app.get('/register', (req, res) => {
 app.post("/register", (req, res) => {
   const { email, password } = req.body;
   const userId = generateRandomString();
-  addUserToDB(email, password, userId)
+  console.log(userId);
   if (!email || !password) {
     return res.status(400).send("Must fill out Email and Password fields");
   }
@@ -179,6 +180,7 @@ app.post("/register", (req, res) => {
   if (foundUser) {
     return res.status(400).send("Email already registered");
   }
+
   res.cookie("user_id", userId);
   res.redirect("/urls");
 });
