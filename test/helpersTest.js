@@ -1,30 +1,50 @@
 const { assert } = require('chai');
 
-const { getUserByEmail } = require('../helpers.js');
+const { findUserByEmail } = require('../helpers.js');
 const { generateRandomString } = require("../helpers");
 const { findURL } = require("../helpers");
 const { users } = require("../helpers");
 const { urlDatabase } = require("../helpers");
 
 const testUsers = {
-  "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
+  "WyattEarp": {
+    id: "WyattEarp", 
+    email: "w.earp@usmarshals.gov", 
+    password: "Josephine"
   },
-  "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
-    password: "dishwasher-funk"
+ "DocHolliday": {
+    id: "DocHolliday", 
+    email: "thedentist@pokerstars.com", 
+    password: "imurhuckleberry"
   }
 };
 
-describe('getUserByEmail', function() {
+const testURLDatabase = {
+  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userId: "WyattEarp" },
+  "9sm5xK": { longURL: "http://www.google.com", userId: "DocHolliday" }
+};
+
+describe('findUserByEmail', function() {
   it('should return a user with valid email', function() {
-    const user = getUserByEmail("user@example.com", users)
-    const expectedOutput = "userRandomID";
-    for (let user in users) {
-     // if 
-    }
+    const user = findUserByEmail("thedentist@pokerstars.com", testUsers)
+    const expectedOutput = "DocHolliday";
+    assert.equal(user.id, expectedOutput, 'I\'m not your huckleberry.');
+  });
+});
+
+
+describe('generateRandomString', function() {
+  it('should generate a random string', function() {
+    const stringOne = generateRandomString();
+    const stringTwo = generateRandomString();
+    assert.notStrictEqual(stringOne, stringTwo);
+  });
+});
+
+describe('findURL', function() {
+  it('find the URL from the database', function() {
+    const url = findURL("b2xVn2", testURLDatabase)
+    const expectedOutput = "http://www.lighthouselabs.ca";
+    assert.equal(url.longURL, expectedOutput, 'wrong')
   });
 });

@@ -1,13 +1,14 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
+const bodyParser = require("body-parser");
 const cookieSession = require("cookie-session")
 const bcrypt = require("bcrypt");
-const findURL = require("helpers");
-const findUserByEmail = require("helpers");
-const bodyParser = require("helpers");
-const generateRandomString = require("helpers");
+const helpers = require("./helpers");
+// const findUserByEmail = require("./helpers");
+// const generateRandomString = require("./helpers");
 const app = express();
 app.use(cookieParser());
+app.use(bodyParser.urlencoded({extended: true}));
 const PORT =8080;
 
 app.set("view engine", "ejs");
@@ -40,20 +41,21 @@ app.use(cookieSession({
 
 app.get("/urls", (req, res) => {
   const user = req.session.user_id
-  let filteredDatabase = {}
- for (let url in urlDatabase){
-    if (findURL(urlDatabase[url], user)){
-     filteredDatabase[url] = findURL(urlDatabase[url], user)
-     };
-   }
+  let filteredDatabase = {};
+  for (let url in urlDatabase) {
+    if (helpers.findURL(urlDatabase[url], user)) {
+      filteredDatabase[url] = helpers.findURL(urlDatabase[url], user);
+    }
+  }
   if (user) {
+    console.log(filteredDatabase);
     const templateVars = {
      urls: filteredDatabase,
-     user: users[req.session["user_id"]]
+     user: users[req.session["user_id"]].email
     }
-     res.render("urls_index", templateVars);
+    return res.render("urls_index", templateVars);
   }
-   res.redirect("/login")
+  return res.redirect("/login")
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
@@ -98,7 +100,7 @@ app.get("/urls/new", (req, res) => {
   } else {
     res.redirect("/login")
   }
-  res.render("urls_new", templateVars);
+  //res.render("urls_new", templateVars);
 });
 
 //---/u
@@ -119,16 +121,20 @@ app.get('/login', (req, res) => {
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  for (const user in users) {
-    if (findUserByEmail(users[user], email)) {
-      if (users[user].password === password) {
-        res.cookie("user_id", users[user].id);
-        res.redirect("/urls");
+  const user = helpers.findUserByEmail(email, users);
+    if (user) {
+      if (user.password === password) {
+        req.session["user_id"] = user.id;
+        return res.redirect("/urls");
       }
-    //  res.redirect("403_loginerror");
-    } 
+    return res.redirect("/403_login"); 
   }
- // res.redirect("/403_notregistered");
+  return res.redirect("/403_registration");
+});
+
+app.get('/logout', (req, res) => {
+  res.clearCookie('user_id');
+  res.redirect('/login');
 });
 
 app.post('/logout', (req, res) => {
@@ -149,14 +155,14 @@ app.get('/register', (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  const userID = generateRandomString();
+  const userID = helpers.generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
   if (!email || !password) {
     res.redirect("/400");
   }
   for (const user in users) {
-    if (findUserByEmail(users[user], email)) {
+    if (helpers.findUserByEmail(users[user], email)) {
       res.redirect("/403_cred");
       return;
     }

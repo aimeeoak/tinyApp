@@ -16,18 +16,12 @@ const generateRandomString = function() {
   }
 };
   
-const findUserByEmail = (email) => {
+const findUserByEmail = (email, users) => {
   const user = Object.values(users).find(user => user.email === email);
   return user;
 };
 
 
-  
-const bodyParser = require("body-parser");
-  // const { delete } = require("request");S
-app.use(bodyParser.urlencoded({extended: true}));
-
-module.exports = { findURL };
-module.exports = { generateRandomString };
-module.exports = { findUserByEmail };
-module.exports = { bodyParser };
+// module.exports = { findURL };
+// module.exports = { generateRandomString };
+module.exports = { findUserByEmail, findURL, generateRandomString };
