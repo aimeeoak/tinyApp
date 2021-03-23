@@ -4,9 +4,11 @@ TinyApp is a full stack web application built with Node and Express that allows 
 
 ## Final Product
 
-!["Screenshot of URLs Page"]()
+!["Screenshot of Logins Page"](https://github.com/aimeeoak/tinyApp/blob/master/docs/LOGIN.png?raw=true)
+User may login in here
+!["Screenshot of URLs Page"](https://github.com/aimeeoak/tinyApp/blob/master/docs/URLS.png?raw=true)
 User Aimee sees her own URLs
-!["Screenshot of New URL page"]()
+!["Screenshot of New URL page"](https://github.com/aimeeoak/tinyApp/blob/master/docs/CREATE-NEW.png?raw=true)
 User Aimee creates a New URL
 
 ## Dependencies
