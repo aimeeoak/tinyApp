@@ -83,7 +83,7 @@ app.get("/urls/:shortURL", (req, res) => {
     res.render("urls_show", templateVars);
     return;
   } else {
-    res.send("This ain't your huckleberry");
+    res.redirect("/401_url");
   }
 });
 
@@ -195,6 +195,14 @@ app.get("/401_login", (req, res) => {
   };
   res.status(401);
   res.render("401_login", templateVars);
+});
+
+app.get("/401_url", (req, res) => {
+  const templateVars = {
+    user: users[req.session.user_id]
+  };
+  res.status(401);
+  res.render("401_url", templateVars);
 });
 
 app.get("*", (req, res) => {
