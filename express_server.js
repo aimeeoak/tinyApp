@@ -30,31 +30,31 @@ app.get("/urls", (req, res) => {
      urls: findURL(urlDatabase, user),
      user: users[req.session.user_id]
     }
-    console.log(templateVars);
     return res.render("urls_index", templateVars);
   }
   return res.redirect("/login")
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
   const shortURL = generateRandomString();
   const longURL = req.body.longURL;
   urlDatabase[shortURL] = { longURL: longURL, userID: req.session.user_id };
   res.redirect(`/urls/${shortURL}`);
 });
 
-app.post("/urls/:shortURL/edit", (req, res) => {
+// ---/urls edit and delete
+
+app.post("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const longURL = req.body.longURL;
-  urlDatabase[shortURL] = longURL;
+  urlDatabase[shortURL].longURL = longURL;
   res.redirect(`/urls/${shortURL}`)
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
-  urlDatabase[shortURL] = { longURL: longURL, userID: req.session.user_id };
-  res.redirect(`/urls/${shortURL}`);
+  delete urlDatabase[shortURL];
+  res.redirect(`/urls`);
 });
 
 
@@ -79,14 +79,19 @@ app.get("/urls/:shortURL", (req, res) => {
     shortURL: shortURL,
     longURL: urlDatabase[shortURL].longURL, 
     user: users[req.session.user_id] };
-  res.render("urls_show", templateVars);
+  if (urlDatabase[shortURL].userID === req.session.user_id) {
+    res.render("urls_show", templateVars);
+    return;
+  } else {
+    res.send("This ain't your huckleberry");
+  }
 });
 
 //---/u
 
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL
-  const longURL = urlDatabase[shortURL]
+  const longURL = urlDatabase[shortURL].longURL;
   res.redirect(longURL);
   });
 
@@ -101,15 +106,13 @@ app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const user = findUserByEmail(email, users);
-  console.log(user);
     if (user && bcrypt.compareSync(password, user.password)) {
       req.session.user_id = user.id;
       return res.redirect("/urls");
     }
     else {
-    return res.redirect("/403_login"); 
+    return res.redirect("/401_login");
   }
-  return res.redirect("/403_registration");
 });
 
 app.post('/logout', (req, res) => {
@@ -129,10 +132,12 @@ app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   if (!email || !password) {
-    res.redirect("/403_registration");
+    res.redirect("/401_registration");
+    return;
   }
   if (findUserByEmail(email, users)) {
-    res.redirect("/403_login");
+    res.redirect("/401_username-error");
+//    res.redirect("/401_login");
     return;
   }
   const hashedPassword = bcrypt.hashSync(password, 10)
@@ -144,36 +149,14 @@ app.post("/register", (req, res) => {
     res.redirect("/urls");
   });
 
-//---error pages
-
-app.get("/403_registration", (req, res) => {
-  const templateVars = {
-    user: users[req.session.user_id]
-  };
-  res.status(403);
-  res.render("403_registration", templateVars);
-});
-
-app.get("/403_login", (req, res) => {
-  const templateVars = {
-    user: users[req.session.user_id]
-  };
-  res.status(403);
-  res.render("403_login", templateVars);
-});
-
-app.get("*", (req, res) => {
-  const templateVars = {
-    user: users[req.session.user_id]
-  };
-  res.status(404);
-  res.render("404", templateVars);
-});
 
 //---bonus babies
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  if (req.session.user_id) {
+    return res.redirect("/urls");
+  }
+  return res.redirect("/login")
 });
 
 app.listen(PORT, () => {
@@ -186,4 +169,38 @@ app.get("/urls.json", (req, res) => {
 
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
+});
+
+//---error pages
+
+app.get("/401_registration", (req, res) => {
+  const templateVars = {
+    user: users[req.session.user_id]
+  };
+  res.status(401);
+  res.render("401_registration", templateVars);
+});
+
+app.get("/401_username-error", (req, res) => {
+  const templateVars = {
+    user: users[req.session.user_id]
+  };
+  res.status(401);
+  res.render("401_username-error", templateVars);
+});
+
+app.get("/401_login", (req, res) => {
+  const templateVars = {
+    user: users[req.session.user_id]
+  };
+  res.status(401);
+  res.render("401_login", templateVars);
+});
+
+app.get("*", (req, res) => {
+  const templateVars = {
+    user: users[req.session.user_id]
+  };
+  res.status(404);
+  res.render("404", templateVars);
 });
